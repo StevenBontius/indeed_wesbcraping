@@ -15,6 +15,7 @@ packages <- c("tidyverse"
              ,"xml2"
              ,"glue"
              ,"Hmisc"
+             ,"skimr"
             )
 
 xfun::pkg_attach2(packages, message = FALSE)
@@ -27,7 +28,7 @@ Loading the data from Indeed
 ```{r}
 job_title <- "Data Analist"
 where <- "Deventer"
-radius <- 100
+radius <- 30
 
 url <- glue("https://nl.indeed.com/jobs?q={job_title}&l={where}&radius={radius}")
 url <- URLencode(url)
@@ -134,6 +135,32 @@ vacancies <- left_join(vacancies, cities, by = c("company_city" = "woonplaats"))
 
 
 ```
+
+# Testing multiple pages
+
+```{r}
+job_ids <- list()
+job_titles <- list()
+
+
+for(i in 1:no_of_pages){
+    page_url <- glue("{url}&start={10 * i-1}")
+    page_url <- URLencode(page_url)
+    page <- read_html(page_url)
+    
+    job_id <- page %>% 
+        html_nodes(".tapItem") %>% 
+        html_attr("data-jk")
+    
+    job_ids <- c(job_ids, job_id)
+    Sys.sleep(2)
+    page_url
+}
+
+vacancy_listing <- data.frame(unlist(job_ids))
+
+```
+
 
 # getting salaries
 
