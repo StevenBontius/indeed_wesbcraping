@@ -1,0 +1,160 @@
+---
+title: "Vacatures"
+author: "Steven Bontius"
+date: "3-3-2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+require(xfun)
+
+packages <- c("tidyverse"    
+             ,"rvest"   
+             ,"xml2"
+             ,"glue"
+             ,"Hmisc"
+            )
+
+xfun::pkg_attach2(packages, message = FALSE)
+```
+
+# Step one: Loading the indeed.com web page
+
+Loading the data from Indeed
+
+```{r}
+job_title <- "Data Analist"
+where <- "Deventer"
+radius <- 100
+
+url <- glue("https://nl.indeed.com/jobs?q={job_title}&l={where}&radius={radius}")
+url <- URLencode(url)
+
+page <- xml2::read_html(url)
+
+indeed <- read_html(url)
+
+```
+
+Loading city information
+
+```{r}
+cities <- read.csv("woonplaatsen.csv", sep = ";")
+# Removed nederland as city since it is also used as a company location. City nederland is very small so can be omitted.
+```
+
+
+# Step two: Basic vacancies information
+
+Getting the number of vacancies
+
+```{r}
+# Getting the string and chopping it up
+search_count_string <- indeed %>% 
+    html_node("#searchCountPages") %>% 
+    html_text() %>% 
+    strsplit(" ") %>% 
+    unlist
+
+# Index value to get the total number from the search count
+neg_index_search_count = -1 
+
+# Getting the correct value from the string, removing the "." and converting it to an integer
+search_count <- search_count_string[length(search_count_string) + neg_index_search_count] %>% 
+    { gsub("\\.","", .) } %>% 
+    as.numeric()
+
+no_of_pages = ceiling(search_count / 10)
+
+sprintf("In total %d jobs are found." , search_count)
+sprintf("There are in total %d pages.", no_of_pages)
+```
+
+# Getting snippet information
+
+```{r}
+# Getting unique job_id
+
+job_ids <- indeed %>% 
+    html_nodes(".tapItem") %>% 
+    html_attr("data-jk")
+
+vacancies <- tibble(job_id = job_ids)
+
+# Getting vacancy names and creating data frame
+vacancy_names <- indeed %>% 
+    html_nodes(".jobTitle") %>% 
+    html_text()
+
+vacancies$vacancy_name <- vacancy_names
+
+# Testing for "nieuw"
+vacancies$new_vacancy <- grepl("nieuw", vacancies$vacancy_name, ignore.case = TRUE)
+
+# Removing "nieuw" from vacancy name
+vacancies$vacancy_name <- gsub("nieuw", "", vacancies$vacancy_name)
+
+# Getting company names and adding to table
+company_names <- indeed %>% 
+    html_nodes(".companyName") %>% 
+    html_text()
+
+vacancies$company_name <- company_names
+
+# Getting company locations and adding to table
+company_locations <- indeed %>% 
+    html_nodes(".companyLocation") %>% 
+    html_text()
+
+vacancies$company_location <- company_locations
+
+# Parsing the city names from company_location
+# Removing the + which is used with multiple cities. Only listing the first city
+# Comparing to CBS database on woonplaatsen in the Netherlands
+
+company_cities <- sapply(strsplit(gsub("\\+", " ", vacancies$company_location), split = " "), function(x) {
+  temp_vec <- toupper(trimws(x))
+  temp_vec[max(which(temp_vec %in% toupper(cities$woonplaats)))]
+})
+
+vacancies$company_city <- company_cities
+
+# Formatting the city names and joining the rest of the city information
+# Renaming columns
+vacancies$company_city <- vacancies$company_city  %>% 
+    tolower() %>% 
+    capitalize()
+
+vacancies <- left_join(vacancies, cities, by = c("company_city" = "woonplaats")) %>% 
+    rename(company_municipality = gemeente, 
+           company_county = provincie, 
+           company_region = regio)
+
+
+```
+
+# getting salaries
+
+```{r}
+# Salary information is not available for all jobs so we need to check which are
+# missing and enter NA for those that are missing the salary
+
+salary_snippet <- indeed %>% 
+    html_nodes(".jobTitle , .salary-snippet") %>% 
+    html_text
+
+temp_salary <- data.frame(job_title = NA, salary = NA)
+
+for(i in (!(salary_snippet %in% vacancy_names))%>%which()){
+      temp_salary[i,1] = paste(salary_snippet[i-1])
+      temp_salary[i,2] = paste(salary_snippet[i])
+    }
+
+```
+
+
+
+# Data cleaninig
+- Removed Nederland as cit from CBS database since it interferes with the company_location nederland.
