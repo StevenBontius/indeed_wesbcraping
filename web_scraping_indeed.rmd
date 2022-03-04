@@ -21,167 +21,130 @@ packages <- c("tidyverse"
 xfun::pkg_attach2(packages, message = FALSE)
 ```
 
-# Step one: Loading the indeed.com web page
 
-Loading the data from Indeed
 
-```{r}
-job_title <- "Data Analist"
-where <- "Deventer"
-radius <- 30
+# Web scraping
 
-url <- glue("https://nl.indeed.com/jobs?q={job_title}&l={where}&radius={radius}")
-url <- URLencode(url)
+It is impossible to use the &start to go to the next page. There is some anti 
+web scraping active that prohibits this. A vjk=2ab3c3e72a3a2f2f variable is added 
+to the url, which makes it unique. More investigation necessary, but for now there
+is no time so doing it the semi manual way. Visiting the website and copying the 
+urls. 
 
-page <- xml2::read_html(url)
-
-indeed <- read_html(url)
-
-```
-
-Loading city information
-
-```{r}
-cities <- read.csv("woonplaatsen.csv", sep = ";")
-# Removed nederland as city since it is also used as a company location. City nederland is very small so can be omitted.
+```{r Setting up for data extraction} 
+job_ids <- list()
+job_titles <- list()
+job_snippets <- list()
+company_names <- list()
+company_locations <- list()
 ```
 
 
-# Step two: Basic vacancies information
+```{r scraping the urls}
 
-Getting the number of vacancies
+page_url <- ""
 
-```{r}
-# Getting the string and chopping it up
-search_count_string <- indeed %>% 
-    html_node("#searchCountPages") %>% 
-    html_text() %>% 
-    strsplit(" ") %>% 
-    unlist
 
-# Index value to get the total number from the search count
-neg_index_search_count = -1 
-
-# Getting the correct value from the string, removing the "." and converting it to an integer
-search_count <- search_count_string[length(search_count_string) + neg_index_search_count] %>% 
-    { gsub("\\.","", .) } %>% 
-    as.numeric()
-
-no_of_pages = ceiling(search_count / 10)
-
-sprintf("In total %d jobs are found." , search_count)
-sprintf("There are in total %d pages.", no_of_pages)
-```
-
-# Getting snippet information
-
-```{r}
-# Getting unique job_id
-
-job_ids <- indeed %>% 
+web_page <- read_html(page_url)
+    
+    
+# Getting job ids    
+job_id <- web_page %>% 
     html_nodes(".tapItem") %>% 
     html_attr("data-jk")
+    
+job_ids <- c(job_ids, job_id)
 
-vacancies <- tibble(job_id = job_ids)
-
-# Getting vacancy names and creating data frame
-vacancy_names <- indeed %>% 
+# Getting job titles
+job_title <- web_page %>% 
     html_nodes(".jobTitle") %>% 
     html_text()
+    
+job_titles <- c(job_titles, job_title)
 
-vacancies$vacancy_name <- vacancy_names
-
-# Testing for "nieuw"
-vacancies$new_vacancy <- grepl("nieuw", vacancies$vacancy_name, ignore.case = TRUE)
-
-# Removing "nieuw" from vacancy name
-vacancies$vacancy_name <- gsub("nieuw", "", vacancies$vacancy_name)
-
-# Getting company names and adding to table
-company_names <- indeed %>% 
-    html_nodes(".companyName") %>% 
+# Getting job snippet
+job_snippet <- web_page %>% 
+    html_nodes(".job-snippet") %>% 
     html_text()
 
-vacancies$company_name <- company_names
+job_snippets <- c(job_snippets, job_snippet)
 
-# Getting company locations and adding to table
-company_locations <- indeed %>% 
+# Getting company names
+company_name <- web_page %>% 
+    html_nodes(".companyName") %>%
+    html_text()
+
+company_names <- c(company_names, company_name)
+    
+# Getting company locations
+
+company_location <- web_page %>% 
     html_nodes(".companyLocation") %>% 
     html_text()
 
-vacancies$company_location <- company_locations
-
-# Parsing the city names from company_location
-# Removing the + which is used with multiple cities. Only listing the first city
-# Comparing to CBS database on woonplaatsen in the Netherlands
-
-company_cities <- sapply(strsplit(gsub("\\+", " ", vacancies$company_location), split = " "), function(x) {
-  temp_vec <- toupper(trimws(x))
-  temp_vec[max(which(temp_vec %in% toupper(cities$woonplaats)))]
-})
-
-vacancies$company_city <- company_cities
-
-# Formatting the city names and joining the rest of the city information
-# Renaming columns
-vacancies$company_city <- vacancies$company_city  %>% 
-    tolower() %>% 
-    capitalize()
-
-vacancies <- left_join(vacancies, cities, by = c("company_city" = "woonplaats")) %>% 
-    rename(company_municipality = gemeente, 
-           company_county = provincie, 
-           company_region = regio)
+company_locations <- c(company_locations, company_location)
 
 
-```
-
-# Testing multiple pages
-
-```{r}
-job_ids <- list()
-job_titles <- list()
-
-
-for(i in 1:no_of_pages){
-    page_url <- glue("{url}&start={10 * i-1}")
-    page_url <- URLencode(page_url)
-    page <- read_html(page_url)
     
-    job_id <- page %>% 
-        html_nodes(".tapItem") %>% 
-        html_attr("data-jk")
-    
-    job_ids <- c(job_ids, job_id)
-    Sys.sleep(2)
-    page_url
-}
-
-vacancy_listing <- data.frame(unlist(job_ids))
-
 ```
 
 
-# getting salaries
+```{r processing the scraped data and saving it to file}
+# unlisting into data frame
+vacancy_listings <- data.frame(unlist(job_ids) 
+                               , unlist(job_titles)
+                               , unlist(job_snippets)
+                               , unlist(company_names)
+                               , unlist(company_locations)
+                               )
+# renaming the columns
+vacancy_listings <- vacancy_listings %>% 
+    rename(job_id = unlist.job_ids.
+           , job_title = unlist.job_titles.
+           , job_snippet = unlist.job_snippets.
+           , company_name = unlist.company_names.
+           , company_location = unlist.company_locations.
+           )
 
-```{r}
-# Salary information is not available for all jobs so we need to check which are
-# missing and enter NA for those that are missing the salary
-
-salary_snippet <- indeed %>% 
-    html_nodes(".jobTitle , .salary-snippet") %>% 
-    html_text
-
-temp_salary <- data.frame(job_title = NA, salary = NA)
-
-for(i in (!(salary_snippet %in% vacancy_names))%>%which()){
-      temp_salary[i,1] = paste(salary_snippet[i-1])
-      temp_salary[i,2] = paste(salary_snippet[i])
-    }
-
+# writing to file
+# write.csv(vacancy_listings, "vacancy_listings.csv")
 ```
 
+# Missing data
+
+The following job_id where missing, since there where only 15 missing manually 
+searched the job descriptions. No clue why the rest of the data is there but
+the job ids are missing.
+
+70c50667036b8f27
+aed9b019296ce1f9
+058780ef8e25ee5d
+5b6221be17f38439
+c2bcd453f7dca0d6
+b5a50f65248f7e14
+9e03c4d1ed5a324e
+46ef8f9b5a7d08e3
+096be47b50d34672
+08ff94886128bf44
+b471e942ec4455d5
+156643125d43971a
+ee2feb1446a1d3a7
+3ca0915b3e0f5ebc
+f978375d051d1021
+
+# Loading the modified file and removing the duplicates
+
+```{r loading vacancies}
+vacancies <- read.csv("vacancy_listings_final.csv", sep = ";") %>% 
+    unique()
+```
 
 
 # Data cleaninig
 - Removed Nederland as cit from CBS database since it interferes with the company_location nederland.
+- Of the 540 scraped jobs only 400 have an unique job id.
+
+# To be investigated
+- Why does &start not work?
+- Why does job_id sometimes become NA?
+
