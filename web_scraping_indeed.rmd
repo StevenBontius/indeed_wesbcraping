@@ -135,9 +135,25 @@ f978375d051d1021
 # Loading the modified file and removing the duplicates
 
 ```{r loading vacancies}
-vacancies <- read.csv("vacancy_listings_final.csv", sep = ";") %>% 
+vacancies <- read.csv("vacancy_listings_final.csv", sep = ";", fileEncoding = 'UTF-8-BOM') %>% 
     unique()
 ```
+
+# Loading complete job web page
+
+```{r}
+full_job_listing <- lapply(vacancies$job_id, function(item){
+    job_page_url <- glue("https://nl.indeed.com/vacature-bekijken?jk={item}")
+    job_page  <- read_html(job_page_url) %>%
+    html_text()
+    Sys.sleep(2)
+    return (tolower(gsub("[^A-Za-z\\-]|\\.+", " ", job_page)))
+})
+
+write.csv(full_job_listing, "full_job_listing_flat.csv")
+```
+
+
 
 
 # Data cleaninig
