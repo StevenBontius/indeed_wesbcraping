@@ -153,6 +153,50 @@ full_job_listing <- lapply(vacancies$job_id, function(item){
 write.csv(full_job_listing, "full_job_listing_flat.csv")
 ```
 
+```{r}
+test <- head(vacancies,2)
+job_salaries <- list()
+company_ratings <- list()
+company_no_reviews <- list()
+company_urls <- list()
+
+for(i in 1:nrow(test)) {
+    Sys.sleep(2)
+    job_page_url <- glue("https://nl.indeed.com/vacature-bekijken?jk={test[i,1]}")
+    web_page <- read_html(job_page_url)
+
+    # extracting salary if available
+    salary <- web_page %>% 
+        html_node(xpath = '//*[@id="salaryInfoAndJobType"]') %>% 
+        html_text()
+    
+    job_salaries <- c(job_salaries, salary)
+    
+    # extracting ratings if available
+    rating <- web_page %>%
+        html_node("[itemprop='ratingValue']") %>%
+        html_attr("content") 
+    
+    company_ratings <- c(company_ratings, rating)
+    
+    # extracting number of reviews if available
+    review <- web_page %>% 
+        html_node("[itemprop='ratingCount']") %>%
+        html_attr("content") 
+    
+    company_no_reviews <- c(company_no_reviews, review)
+    
+    # extracting the company url for more information about the company
+    company_url <- web_page %>%
+        html_node(".icl-u-lg-mr--sm") %>% 
+        html_attr("href")
+    
+    company_urls <- c(company_urls, company_url)
+    
+}
+
+
+```
 
 
 
