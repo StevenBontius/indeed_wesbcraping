@@ -137,6 +137,7 @@ f978375d051d1021
 
 ```{r loading vacancies}
 vacancies <- read.csv("vacancy_listings_final.csv")
+full_job_listing <- readRDS("full_job_listing.RData")
 ```
 
 # Loading complete job web page
@@ -145,16 +146,17 @@ vacancies <- read.csv("vacancy_listings_final.csv")
 full_job_listing <- lapply(vacancies$job_id, function(job_id){
     job_page_url <- glue("https://nl.indeed.com/vacature-bekijken?jk={job_id}")
     job_page  <- read_html(job_page_url) %>%
-    html_text()
+        html_node(".jobsearch-jobDescriptionText") %>% 
+        html_text2()
     Sys.sleep(2)
     return(job_page)
 })
 
 full_job_listing <- lapply(full_job_listing, function(page) {
-    return(tolower(page))
+    return (tolower(gsub("\\\n|\\,|\\.|\\:|\\;|\\-|\\)|\\(\\!", " ", page)))
 })
 
-# saveRDS(full_job_listing, file="full_job_listing.RData")
+#saveRDS(full_job_listing, file="full_job_listing.RData")
 ```
 
 ```{r}
@@ -202,34 +204,40 @@ vacancies$company_no_reviews <- unlist(company_no_reviews)
 # Skills
 
 ## Hard skills
-sql
-tableau
-power (powerbi)
-r
-scrum
-agile
-sas
-python
+-sql
+-tableau
+-powerbi
+-r
+-scrum
+-agile
+-python
+-azure
+-excel
+-qlik
+-cognos
+-SPSS
+-SSIS
+-SSRS
+-SSAS
+-git / github
+
+
 statistiek
-azure
+
 sap
 big
-excel
-qlik
-cognos
-SPSS
-SSIS
-SSRS
-SSAS
+
+
+
+
 machine
 learning
 salesforce
 lean
-sigma
 analytics
 cloud / bigquery
 ai
-git / github
+
 
 ## Soft skills
 analytisch
@@ -270,9 +278,39 @@ vacancies$contains_sql <-  add_keyword("sql")
 vacancies$contains_tableau <- add_keyword("tableau")
 vacancies$contains_powerbi <-  add_keyword(c("powerbi", "power_bi", "power-bi", "power bi"))
 vacancies$contains_python <- add_keyword("python")
+vacancies$contains_scrum <- add_keyword("scrum")
+vacancies$contains_agile <- add_keyword("agile")
+vacancies$contains_azure <- add_keyword("azure")
+vacancies$contains_excel <- add_keyword("\\bexcel\\b")
 
 
-vacancies$contains_r <- add_keyword("\\sr\\s")
+
+
+$contains_r <- add_keyword("\\<r\\>")
+
+
+vacancies$contains_qlik <- add_keyword("qlik")
+vacancies$contains_cognos <- add_keyword("cognos")
+vacancies$contains_lean <- add_keyword("lean")
+
+
+
+
+
+
+
+
+
+
+
+
+
+vacancies$contains_SPSS <- add_keyword("SPSS")
+vacancies$contains_SSIS <- add_keyword("SSIS")
+vacancies$contains_SSRS <- add_keyword("SSRS")
+vacancies$contains_SSAS <- add_keyword("SSAS")
+vacancies$contains_git <- add_keyword(c("github"))
+
 
 
 ```
