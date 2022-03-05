@@ -142,15 +142,19 @@ vacancies <- read.csv("vacancy_listings_final.csv")
 # Loading complete job web page
 
 ```{r}
-full_job_listing <- lapply(vacancies$job_id, function(item){
-    job_page_url <- glue("https://nl.indeed.com/vacature-bekijken?jk={item}")
+full_job_listing <- lapply(vacancies$job_id, function(job_id){
+    job_page_url <- glue("https://nl.indeed.com/vacature-bekijken?jk={job_id}")
     job_page  <- read_html(job_page_url) %>%
     html_text()
     Sys.sleep(2)
-    return (tolower(gsub("[^A-Za-z\\-]|\\.+", " ", job_page)))
+    return(job_page)
 })
 
-write.csv(full_job_listing, "full_job_listing_flat.csv")
+full_job_listing <- lapply(full_job_listing, function(page) {
+    return(tolower(page))
+})
+
+# saveRDS(full_job_listing, file="full_job_listing.RData")
 ```
 
 ```{r}
@@ -198,13 +202,13 @@ vacancies$company_no_reviews <- unlist(company_no_reviews)
 # Skills
 
 ## Hard skills
-sql server
+sql
 tableau
-powerbi / power
+power (powerbi)
+r
 scrum
 agile
 sas
-r
 python
 statistiek
 azure
@@ -247,14 +251,30 @@ hbo
 wo
 
 ```{r}
-# functions to check for key words present in data
+# function to check for key words present in data
+
 is_keyword_present <- function(keyword, data){
-    
+    return( if(grepl(paste(keyword, collapse = "|"), data) == TRUE) 
+        1 else 0
+    )
 }
 
+add_keyword <- function(keyword) {
+    lapply(full_job_listing, function(full_page) {
+      is_keyword_present(keyword, full_page)  
+    })
+}
 
-# loading data 
-full_job_data <- read.csv("full_job_listing_flat.csv")
+# hard skills
+vacancies$contains_sql <-  add_keyword("sql")
+vacancies$contains_tableau <- add_keyword("tableau")
+vacancies$contains_powerbi <-  add_keyword(c("powerbi", "power_bi", "power-bi", "power bi"))
+vacancies$contains_python <- add_keyword("python")
+
+
+vacancies$contains_r <- add_keyword("\\sr\\s")
+
+
 ```
 
 
