@@ -42,7 +42,7 @@ company_locations <- list()
 
 ```{r scraping the urls}
 
-page_url <- ""
+page_url <- "url"
 
 
 web_page <- read_html(page_url)
@@ -85,7 +85,6 @@ company_location <- web_page %>%
 company_locations <- c(company_locations, company_location)
 
 
-    
 ```
 
 
@@ -105,9 +104,11 @@ vacancy_listings <- vacancy_listings %>%
            , company_name = unlist.company_names.
            , company_location = unlist.company_locations.
            )
+#reindexing rows
+rownames(vacancies) <- 1:nrow(vacancies)
 
-# writing to file
-# write.csv(vacancy_listings, "vacancy_listings.csv")
+# writing to file commented out for safety reasons
+# write.csv(vacancy_listings, "vacancy_listings.csv", row.names=FALSE)
 ```
 
 # Missing data
@@ -135,8 +136,7 @@ f978375d051d1021
 # Loading the modified file and removing the duplicates
 
 ```{r loading vacancies}
-vacancies <- read.csv("vacancy_listings_final.csv", sep = ";", fileEncoding = 'UTF-8-BOM') %>% 
-    unique()
+vacancies <- read.csv("vacancy_listings_final.csv")
 ```
 
 # Loading complete job web page
@@ -154,15 +154,13 @@ write.csv(full_job_listing, "full_job_listing_flat.csv")
 ```
 
 ```{r}
-test <- head(vacancies,2)
 job_salaries <- list()
 company_ratings <- list()
 company_no_reviews <- list()
-company_urls <- list()
 
-for(i in 1:nrow(test)) {
+for(i in 1:nrow(vacancies)) {
     Sys.sleep(2)
-    job_page_url <- glue("https://nl.indeed.com/vacature-bekijken?jk={test[i,1]}")
+    job_page_url <- glue("https://nl.indeed.com/vacature-bekijken?jk={vacancies[i,1]}")
     web_page <- read_html(job_page_url)
 
     # extracting salary if available
@@ -186,15 +184,69 @@ for(i in 1:nrow(test)) {
     
     company_no_reviews <- c(company_no_reviews, review)
     
-    # extracting the company url for more information about the company
-    company_url <- web_page %>%
-        html_node(".icl-u-lg-mr--sm") %>% 
-        html_attr("href")
-    
-    company_urls <- c(company_urls, company_url)
-    
 }
 
+# Adding to vacancies
+
+vacancies$job_salary <- unlist(job_salaries)
+vacancies$company_rating <- unlist(company_ratings)
+vacancies$company_no_reviews <- unlist(company_no_reviews)
+
+#write.csv(vacancies, "vacancy_listings_final.csv", row.names=FALSE)
+```
+
+# Skills
+
+## Hard skills
+sql server
+tableau
+powerbi / power
+scrum
+agile
+sas
+r
+python
+statistiek
+azure
+sap
+big
+excel
+qlik
+cognos
+SPSS
+SSIS
+SSRS
+SSAS
+machine
+learning
+salesforce
+lean
+sigma
+analytics
+cloud / bigquery
+ai
+
+
+## Soft skills
+analytisch
+communicatief / communicatieve
+inzichten
+presenteren
+klantgerichtheid / klantcontact
+resultaatgerichtheid
+ondernemend
+analyseren
+creativiteit /creatief
+proactief / actief
+adviseren / advies
+zelfstandig / zelfstandigheid
+
+
+## Educations
+hbo
+wo
+
+```{r}
 
 ```
 
@@ -203,6 +255,7 @@ for(i in 1:nrow(test)) {
 # Data cleaninig
 - Removed Nederland as cit from CBS database since it interferes with the company_location nederland.
 - Of the 540 scraped jobs only 400 have an unique job id.
+- reindexed row numbers
 
 # To be investigated
 - Why does &start not work?
