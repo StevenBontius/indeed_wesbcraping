@@ -99,3 +99,22 @@ vacancies <- left_join(vacancies, cities, by = c("company_city" = "woonplaats"))
 ```
 
 
+# getting salaries
+
+```{r}
+# Salary information is not available for all jobs so we need to check which are
+# missing and enter NA for those that are missing the salary
+
+salary_snippet <- indeed %>% 
+    html_nodes(".jobTitle , .salary-snippet") %>% 
+    html_text
+
+temp_salary <- data.frame(job_title = NA, salary = NA)
+
+for(i in (!(salary_snippet %in% vacancy_names))%>%which()){
+      temp_salary[i,1] = paste(salary_snippet[i-1])
+      temp_salary[i,2] = paste(salary_snippet[i])
+    }
+
+```
+
