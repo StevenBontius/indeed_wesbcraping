@@ -225,7 +225,7 @@ sigma
 analytics
 cloud / bigquery
 ai
-
+git / github
 
 ## Soft skills
 analytisch
@@ -236,7 +236,7 @@ klantgerichtheid / klantcontact
 resultaatgerichtheid
 ondernemend
 analyseren
-creativiteit /creatief
+creativiteit / creatief
 proactief / actief
 adviseren / advies
 zelfstandig / zelfstandigheid
@@ -247,7 +247,14 @@ hbo
 wo
 
 ```{r}
+# functions to check for key words present in data
+is_keyword_present <- function(keyword, data){
+    
+}
 
+
+# loading data 
+full_job_data <- read.csv("full_job_listing_flat.csv")
 ```
 
 
