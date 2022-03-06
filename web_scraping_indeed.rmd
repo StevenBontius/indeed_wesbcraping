@@ -201,56 +201,7 @@ vacancies$company_no_reviews <- unlist(company_no_reviews)
 #write.csv(vacancies, "vacancy_listings_final.csv", row.names=FALSE)
 ```
 
-# Skills
-
-## Hard skills
--sql
--tableau
--powerbi
--r
--scrum
--agile
--python
--azure
--excel
--qlik
--cognos
--spss
--ssis
--ssrs
--ssas
--git / github
--sap
--lean
--salesforce
--analytics
--cloud
--bigquery
-
-
-
-## Soft skills
-analytisch / analytical
-communicatief / communicatieve / communicate / communicative 
-inzicht / insight
-present
-klantgerichtheid / klantcontact / klanten/ customers / client
-dashboards
-stakeholders
-impact
-resultaatgerichtheid
-ondernemend
-analyseren
-creativiteit / creatief
-proactief / actief
-adviseren / advies
-zelfstandig / zelfstandigheid
-
-
-## Educations
-hbo / bachelor
-wo / master
-phd 
+# Searching the job descriptions for required skills and education
 
 ```{r}
 # function to check for key words present in data
@@ -300,16 +251,14 @@ vacancies$contains_stakeholder  <- add_keyword("stakeholder")
 vacancies$contains_impact       <- add_keyword("impact")
 vacancies$contains_result       <- add_keyword("resultaatgerichtheid")
 vacancies$contains_entrepeneur  <- add_keyword(c("ondernemend", "entrepreneur"))
+vacancies$contains_creativity   <- add_keyword(c("creativiteit", "creatief", "creativity"))
+vacancies$contains_proactive    <- add_keyword(c("proactief", "proacitviteit", "proactive"))
+vacancies$contains_independent  <- add_keyword(c("zelfstandig", "independent"))
 
-                                               
+# education
 
-
-
-creativiteit / creatief
-proactief / actief
-adviseren / advies
-zelfstandig / zelfstandigheid
-
+vacancies$contains_bachelor     <- add_keyword(c("\\<hbo\\>", "bachelor", "\\<bsc\\>"))
+vacancies$contains_master       <- add_keyword(c("\\<wo\\>", "\\<master\\>", "\\<msc\\>"))
 
 
 
