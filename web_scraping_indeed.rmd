@@ -1,7 +1,7 @@
 ---
 title: "Vacatures"
 author: "Steven Bontius"
-date: "3-3-2022"
+date: "6-3-2022"
 output: html_document
 ---
 
@@ -135,9 +135,10 @@ f978375d051d1021
 
 # Loading the modified file and removing the duplicates
 
-```{r loading vacancies}
+```{r loading data}
 vacancies <- read.csv("vacancy_listings_final.csv")
 full_job_listing <- readRDS("full_job_listing.RData")
+cities <- read.csv("woonplaatsen.csv", sep = ";")
 ```
 
 # Loading complete job web page
@@ -201,7 +202,7 @@ vacancies$company_no_reviews <- unlist(company_no_reviews)
 #write.csv(vacancies, "vacancy_listings_final.csv", row.names=FALSE)
 ```
 
-# Searching the job descriptions for required skills and education
+# Counting the job descriptions for required skills and education
 
 ```{r}
 # function to check for key words present in data
@@ -259,18 +260,73 @@ vacancies$contains_independent  <- add_keyword(c("zelfstandig", "independent"))
 
 vacancies$contains_bachelor     <- add_keyword(c("\\<hbo\\>", "bachelor", "\\<bsc\\>"))
 vacancies$contains_master       <- add_keyword(c("\\<wo\\>", "\\<master\\>", "\\<msc\\>"))
+```
 
+# Modifying data
+
+```{r}
+# Handling new vacancies
+vacancies$new_vacancy <- grepl("nieuw", vacancies$job_title, ignore.case = TRUE)
+vacancies$job_title <- gsub("nieuw", "", vacancies$job_title)
+
+# Parsing the city names from company_location
+# Removing the + which is used with multiple cities. Only listing the first city
+# Comparing to CBS database on woonplaatsen in the Netherlands
+
+vacancies$company_location <- gsub("Den Haag", "'s-Gravenhage", vacancies$company_location)
+vacancies$company_location <- gsub("Den Bosch", "'s-Hertogenbosch", vacancies$company_location)
+vacancies$company_location <- gsub("Amsterdam-Zuidoost", "Amsterdam", vacancies$company_location)
+# Controversial but saves a lot of time for a couple of observations
+vacancies$company_location <- gsub("Capelle aan den IJssel", "Rotterdam", vacancies$company_location)
+
+# Saving warning state and suppress warning 
+defaultW <- getOption("warn") 
+options(warn = -1) 
+
+# Extract cities from company_location
+vacancies$company_city <- sapply(strsplit(gsub("\\+", " ", vacancies$company_location), split = " "), function(x) {
+  temp_vec <- toupper(trimws(x))
+  temp_vec[max(which(temp_vec %in% toupper(cities$woonplaats)))]
+})
+
+# Restore warning state
+options(warn = defaultW)
+
+# Formatting the city names and joining the rest of the city information
+# Renaming columns
+vacancies$company_city <- vacancies$company_city  %>% 
+    tolower()
+
+cities$woonplaats <- cities$woonplaats %>% 
+    tolower()
+
+vacancies <- left_join(vacancies, cities, by = c("company_city" = "woonplaats")) %>% 
+    rename(company_municipality = gemeente, 
+           company_county = provincie, 
+           company_region = regio)
+
+# Parsing for remote working
+remote_working <- c("thuiswerken", "remote")    
+vacancies$remote_hybrid_job <- grepl(paste(remote_working, collapse = "|"), tolower(vacancies$company_location))
 
 
 ```
 
 
 
-# Data cleaninig
-- Removed Nederland as cit from CBS database since it interferes with the company_location nederland.
-- Of the 540 scraped jobs only 400 have an unique job id.
-- reindexed row numbers
 
+# Data cleaninig
+## woonplaatsen
+- Removed Nederland as cit from CBS database since it interferes with the company_location nederland.
+- Added "Den-Haag" and "Den-Bosch"
+## web scraping
+- Of the 540 scraped jobs only 415have an unique job id.
+- reindexed row numbers
+- renamed Den Haag to 's-Gravenhage
+- renamed Den Bosch to 's-Hertogenbosch
+- renamed Amsterdam-Zuidoost to Amsterdam
+- renamed Capelle aan den IJssel to Rotterdam
+    
 # To be investigated
 - Why does &start not work?
 - Why does job_id sometimes become NA?
