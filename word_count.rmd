@@ -1,0 +1,80 @@
+---
+title: "Extracting the most used words in job listings"
+author: "Steven Bontius"
+date: "6-3-2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(xfun)
+
+packages <- c("wordcloud"    
+             ,"tm"
+             ,"dplyr"
+             ,"tidytext"
+             ,"ggplot2"
+             ,"stopwords"
+            )
+
+xfun::pkg_attach2(packages, message = FALSE)
+
+```
+
+## Loading the data 
+
+Loading the data from web scraping activities 
+```{r}
+job_listing <- unlist(readRDS("full_job_listing.RData"))
+
+```
+
+## Creating word cloud
+
+```{r}
+job_listing_text <- Corpus(VectorSource(job_listing))
+
+job_text_clean <- tm_map(job_listing_text, removePunctuation)
+
+job_text_clean <- tm_map(job_text_clean, content_transformer(tolower))
+
+job_text_clean <- tm_map(job_text_clean, removeNumbers)
+
+job_text_clean <- tm_map(job_text_clean, stripWhitespace)
+
+job_text_clean <- tm_map(job_text_clean, removeWords, stopwords("english"))
+                         
+job_text_clean <- tm_map(job_text_clean, removeWords, stopwords("dutch"))
+
+wordcloud(job_text_clean, scale = c(2, 1), min.freq = 250, colors = rainbow(30))
+
+```
+
+Creating a word cloud is nice but of no use for thorough investigation
+
+## Counting the words
+
+```{r}
+job_listing_df <- tibble(Text = job_listing) 
+
+head(job_listing_df, n = 20)
+
+job_listing_words <- job_listing_df %>% 
+    unnest_tokens(output = word, input = Text) %>%
+    rename(words = 1)
+
+stopwords <- data.frame(c(stopwords("en", source = "snowball"), stopwords("nl", source = "snowball")))
+
+stopwords <- stopwords %>% 
+    rename(words = 1)
+
+cleaned_job_words <- anti_join(job_listing_words, stopwords)
+
+job_word_counts <- cleaned_job_words %>%
+    count(words, sort = TRUE)
+
+# Saving to csv for manual cleaning in Excel
+
+write.csv(job_word_counts, "job_words_counted.csv")
+```
+
