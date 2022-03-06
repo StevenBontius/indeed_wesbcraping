@@ -16,6 +16,7 @@ packages <- c("tidyverse"
              ,"glue"
              ,"Hmisc"
              ,"skimr"
+             ,"readr"
             )
 
 xfun::pkg_attach2(packages, message = FALSE)
@@ -308,6 +309,26 @@ vacancies <- left_join(vacancies, cities, by = c("company_city" = "woonplaats"))
 # Parsing for remote working
 remote_working <- c("thuiswerken", "remote")    
 vacancies$remote_hybrid_job <- grepl(paste(remote_working, collapse = "|"), tolower(vacancies$company_location))
+
+# parttime or full time
+vacancies$fulltime <- grepl("voltijds", tolower(vacancies$job_salary))
+vacancies$parttime <- grepl("deeltijds", tolower(vacancies$job_salary))
+
+# permanent or temporary contract
+vacancies$temporary     <- grepl("contract bepaalde tijd", tolower(vacancies$job_salary))
+vacancies$permanent     <- grepl("vaste baan", tolower(vacancies$job_salary))
+vacancies$internship    <- grepl("stage", tolower(vacancies$job_salary))
+
+# parsing salary
+vacancies$salary_year   <- grepl("jaar", tolower(vacancies$job_salary))
+
+vacancies$job_salary <- gsub("\\.", "", vacancies$job_salary)
+vacancies$job_salary <- gsub("\\,", "", vacancies$job_salary)
+
+
+vacancies$mean_salary <- lapply(vacancies$job_salary, function(salary_string){
+    return(mean(unlist(as.numeric(str_extract_all(salary_string,"\\(?[0-9,.]+\\)?")[[1]]))))
+})
 
 
 ```
