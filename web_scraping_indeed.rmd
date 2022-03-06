@@ -224,17 +224,20 @@ vacancies$company_no_reviews <- unlist(company_no_reviews)
 -lean
 -salesforce
 -analytics
-- cloud
-- bigquery
+-cloud
+-bigquery
 
 
 
 ## Soft skills
-analytisch
-communicatief / communicatieve
-inzichten
-presenteren
-klantgerichtheid / klantcontact
+analytisch / analytical
+communicatief / communicatieve / communicate / communicative 
+inzicht / insight
+present
+klantgerichtheid / klantcontact / klanten/ customers / client
+dashboards
+stakeholders
+impact
 resultaatgerichtheid
 ondernemend
 analyseren
@@ -245,8 +248,9 @@ zelfstandig / zelfstandigheid
 
 
 ## Educations
-hbo
-wo
+hbo / bachelor
+wo / master
+phd 
 
 ```{r}
 # function to check for key words present in data
@@ -286,23 +290,25 @@ vacancies$contains_salesforce   <- add_keyword("salesforce")
 vacancies$contains_analytics    <- add_keyword("analytics")
 vacancies$contains_cloud        <- add_keyword("\\<cloud\\>")
 vacancies$contains_bigquery     <- add_keyword(c("bigquery", "big query"))
+vacancies$contains_dashboard    <- add_keyword("dashboard")
 
 # soft skills
-vacancies$contains_analitical   <- add_keyword(c("analitisch", "analitical"))    
-vacancies$contains_communicative <- add_keyword(c("communicatief"))
-communicatief / communicatieve
-inzichten
-presenteren
-klantgerichtheid / klantcontact
-resultaatgerichtheid
-ondernemend
-analyseren
+vacancies$contains_analytical   <- add_keyword(c("analitisch", "analytical"))    
+vacancies$contains_communicative <- add_keyword(c("communicatief","communicatieve", "communicator", "communicative", "communicate"))
+vacancies$contains_customer     <- add_keyword(c("klantgerichtheid", "klant", "customer"))
+vacancies$contains_stakeholder  <- add_keyword("stakeholder")
+vacancies$contains_impact       <- add_keyword("impact")
+vacancies$contains_result       <- add_keyword("resultaatgerichtheid")
+vacancies$contains_entrepeneur  <- add_keyword(c("ondernemend", "entrepreneur"))
+
+                                               
+
+
+
 creativiteit / creatief
 proactief / actief
 adviseren / advies
 zelfstandig / zelfstandigheid
-
-
 
 
 
