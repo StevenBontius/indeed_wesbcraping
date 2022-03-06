@@ -153,7 +153,7 @@ full_job_listing <- lapply(vacancies$job_id, function(job_id){
 })
 
 full_job_listing <- lapply(full_job_listing, function(page) {
-    return (tolower(gsub("\\\n|\\,|\\.|\\:|\\;|\\-|\\)|\\(\\!", " ", page)))
+    return (tolower(gsub("\\\n|\\,|\\:|\\;|\\-|\\)|\\(\\!", " ", page)))
 })
 
 #saveRDS(full_job_listing, file="full_job_listing.RData")
@@ -215,10 +215,10 @@ vacancies$company_no_reviews <- unlist(company_no_reviews)
 -excel
 -qlik
 -cognos
--SPSS
--SSIS
--SSRS
--SSAS
+-spss
+-ssis
+-ssrs
+-ssas
 -git / github
 
 
@@ -274,23 +274,29 @@ add_keyword <- function(keyword) {
 }
 
 # hard skills
-vacancies$contains_sql <-  add_keyword("sql")
-vacancies$contains_tableau <- add_keyword("tableau")
-vacancies$contains_powerbi <- add_keyword(c("powerbi", "power_bi", "power-bi", "power bi"))
-vacancies$contains_python <- add_keyword("python")
-vacancies$contains_scrum <- add_keyword("scrum")
-vacancies$contains_agile <- add_keyword("agile")
-vacancies$contains_azure <- add_keyword("azure")
-vacancies$contains_excel <- add_keyword("\\bexcel\\b")
-vacancies$contains_r <- add_keyword("\\<r\\>")
-vacancies$contains_qlik <- add_keyword("qlik")
-vacancies$contains_cognos <- add_keyword("cognos")
-vacancies$contains_lean <- add_keyword("lean")
+vacancies$contains_sql      <- add_keyword("sql")
+vacancies$contains_tableau  <- add_keyword("tableau")
+vacancies$contains_powerbi  <- add_keyword(c("powerbi", "power_bi", "power-bi", "power bi"))
+vacancies$contains_python   <- add_keyword("python")
+vacancies$contains_scrum    <- add_keyword("scrum")
+vacancies$contains_agile    <- add_keyword("agile")
+vacancies$contains_azure    <- add_keyword("azure")
+vacancies$contains_excel    <- add_keyword("\\bexcel\\b")
+vacancies$contains_r        <- add_keyword("\\<r\\>")
+vacancies$contains_qlik     <- add_keyword("qlik")
+vacancies$contains_cognos   <- add_keyword("cognos")
+vacancies$contains_lean     <- add_keyword("lean")
+vacancies$contains_spss     <- add_keyword("spss")
+vacancies$contains_ssis     <- add_keyword("ssis")
+vacancies$conatins_ssrs     <- add_keyword("ssrs")
+vacancies$contains_ssas     <- add_keyword("ssas")
 
 
-
-
-
+-spss
+-ssis
+-ssrs
+-ssas
+-git / github
 
 
 
