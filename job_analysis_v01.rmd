@@ -7,12 +7,62 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+# Loading packages
 require(xfun)
-
-packages <- c("tidyverse"    
+packages <- c("tidyverse"
+              ,"wordcloud"
+              ,"tm"
             )
-
 xfun::pkg_attach2(packages, message = FALSE)
-```
 
-#
+# Loading vacancies data set
+vacancies <- readRDS("vacancies_final.RData")
+```
+# Analysis of indeed vacancies 
+This report will analyse the job vacancies posted on indeed for the position of
+data analist scraped from indeed on the 5th of March 2022.
+
+## Job title
+The searching algorithm of indeed does not only return vacancies with the job 
+title of "data analist" but also returns other job titles. Looking at the data 
+reveals the following.
+
+```{r job_title_word_cloud, message=FALSE, warning=FALSE}
+job_titles <- Corpus(VectorSource(vacancies$job_title))
+job_titles_clean <- tm_map(job_titles, content_transformer(tolower))
+job_titles_clean <- tm_map(job_titles_clean, stripWhitespace)
+wordcloud(job_titles_clean, scale = c(3, 2), min.freq = 15, colors = rainbow(30))
+```
+<br />
+Besides the obvious data analist and the English equivalent the following 
+interesting words can be found:
+
+* junior & senior
+* business
+* intelligence
+* scientist
+
+Looking at the data set the following other job titles can be distilled
+
+* Business analist
+* Business intelligence analist
+* Data scientist
+
+Although a business analist is substantially different from a data analist some 
+of the vacancies do not describe a true business analist function but are a data
+analist function in disguise. 
+
+A business intelligence analist is more geared to KPI's and dashboards and is
+a job title that should be explored in the future.
+
+A data scientist is more geared to machine learing, but similar to the business
+analist the job title is not always accurate.
+
+
+
+# Findings
+
+* Job titles are not always indicative of the actual job activities
+* Investigate the job title of business intelligence analist
+

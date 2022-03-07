@@ -321,6 +321,10 @@ vacancies$temporary     <- grepl("contract bepaalde tijd", tolower(vacancies$job
 vacancies$permanent     <- grepl("vaste baan", tolower(vacancies$job_salary))
 vacancies$internship    <- grepl("stage", tolower(vacancies$job_salary))
 
+# junior or senior position
+vacancies$junior        <- grepl("junior", tolower(vacancies$job_title))
+vacancies$senior        <- grepl("senior", tolower(vacancies$job_title))
+
 # parsing salary
 vacancies$salary_year   <- grepl("jaar", tolower(vacancies$job_salary))
 
@@ -339,7 +343,7 @@ vacancies$mean_salary[is.nan(vacancies$mean_salary)] <- NA
 # Saving vacancies
 
 ```{r}
-#saveRDS(full_job_listing, file="vacancies_final.RData")
+#saveRDS(vacancies, file="vacancies_final.RData")
 ```
 
 
@@ -347,6 +351,7 @@ vacancies$mean_salary[is.nan(vacancies$mean_salary)] <- NA
 ## woonplaatsen
 - Removed Nederland as cit from CBS database since it interferes with the company_location nederland.
 - Added "Den-Haag" and "Den-Bosch"
+- Removed Noordwijk groningen since it is double (zuid holland and groningen) resulted in two rows for the vacancie in noordwijk
 ## web scraping
 - Of the 540 scraped jobs only 415have an unique job id.
 - reindexed row numbers
