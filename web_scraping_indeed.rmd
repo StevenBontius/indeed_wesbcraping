@@ -1,7 +1,7 @@
 ---
 title: "Vacatures"
 author: "Steven Bontius"
-date: "6-3-2022"
+date: "7-3-2022"
 output: html_document
 ---
 
@@ -134,7 +134,7 @@ ee2feb1446a1d3a7
 3ca0915b3e0f5ebc
 f978375d051d1021
 
-# Loading the modified file and removing the duplicates
+# Loading the modified file
 
 ```{r loading data}
 vacancies <- read.csv("vacancy_listings_final.csv")
@@ -159,9 +159,7 @@ full_job_listing <- lapply(full_job_listing, function(page) {
 })
 
 #saveRDS(full_job_listing, file="full_job_listing.RData")
-```
 
-```{r}
 job_salaries <- list()
 company_ratings <- list()
 company_no_reviews <- list()
@@ -201,6 +199,10 @@ vacancies$company_rating <- unlist(company_ratings)
 vacancies$company_no_reviews <- unlist(company_no_reviews)
 
 #write.csv(vacancies, "vacancy_listings_final.csv", row.names=FALSE)
+```
+
+```{r}
+
 ```
 
 # Counting the job descriptions for required skills and education
@@ -325,15 +327,20 @@ vacancies$salary_year   <- grepl("jaar", tolower(vacancies$job_salary))
 vacancies$job_salary <- gsub("\\.", "", vacancies$job_salary)
 vacancies$job_salary <- gsub("\\,", "", vacancies$job_salary)
 
-
-vacancies$mean_salary <- lapply(vacancies$job_salary, function(salary_string){
+vacancies$mean_salary <- unlist(lapply(vacancies$job_salary, function(salary_string){
     return(mean(unlist(as.numeric(str_extract_all(salary_string,"\\(?[0-9,.]+\\)?")[[1]]))))
-})
+}))
+
+# converting NaN to NA
+vacancies$mean_salary[is.nan(vacancies$mean_salary)] <- NA
 
 
+    ```
+# Saving vacancies
+
+```{r}
+#saveRDS(full_job_listing, file="vacancies_final.RData")
 ```
-
-
 
 
 # Data cleaninig
